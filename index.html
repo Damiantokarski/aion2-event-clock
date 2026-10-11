@@ -1,0 +1,530 @@
+<title>Zegar Atrei</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;700&display=swap">
+<style>
+/* Plan: hero = 24-godzinna tarcza dnia serwera (jedna śmiała rzecz), reszta cicha: liniowane rzędy, bez kart.
+   Paleta: otchłań (indigo) + eter (turkus) + złoto Siel; ciemny motyw jest pierwotny. */
+:root{
+  --bg:#0f1328; --bg2:#151a35; --line:#2a3155; --line2:#3b4474; --fg:#eef0f8; --mute:#9aa2c7;
+  --gold:#d9b25a; --aether:#6fd3dd; --ember:#ff8d7a; --violet:#b9a7ff; --sea:#7fb3ff;
+  --gold-dim:rgba(217,178,90,.18); --aether-dim:rgba(111,211,221,.16); --ember-dim:rgba(255,141,122,.16); --violet-dim:rgba(185,167,255,.16); --sea-dim:rgba(127,179,255,.16);
+  --display:"Cormorant Garamond",Georgia,"Times New Roman",serif; --body:"Manrope","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#eef0f5; --bg2:#ffffff; --line:#cfd4e6; --line2:#aeb6d1; --fg:#171b33; --mute:#5c648a;
+  --gold:#8a6a18; --aether:#117d8a; --ember:#b23a2b; --violet:#5a47b8; --sea:#245fb5;
+  --gold-dim:rgba(138,106,24,.14); --aether-dim:rgba(17,125,138,.13); --ember-dim:rgba(178,58,43,.12); --violet-dim:rgba(90,71,184,.13); --sea-dim:rgba(36,95,181,.13);
+  color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#eef0f5; --bg2:#ffffff; --line:#cfd4e6; --line2:#aeb6d1; --fg:#171b33; --mute:#5c648a;
+  --gold:#8a6a18; --aether:#117d8a; --ember:#b23a2b; --violet:#5a47b8; --sea:#245fb5;
+  --gold-dim:rgba(138,106,24,.14); --aether-dim:rgba(17,125,138,.13); --ember-dim:rgba(178,58,43,.12); --violet-dim:rgba(90,71,184,.13); --sea-dim:rgba(36,95,181,.13);
+  color-scheme:light}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:0 56px}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;letter-spacing:.005em}
+h1{font-size:clamp(40px,6vw,64px);line-height:1}
+h2{font-size:30px;line-height:1.1}
+h3{font-size:22px;line-height:1.15}
+p{margin:0}
+.mute{color:var(--mute)}
+.small{font-size:14px}
+button,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible{outline:2px solid var(--aether);outline-offset:2px}
+
+/* top bar: language */
+.topbar{display:flex;justify-content:flex-end;padding-block:14px 0}
+.lang{display:inline-flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden}
+.lang button{background:none;border:0;padding:5px 14px;font-size:14px;font-weight:500;color:var(--mute);cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--fg);color:var(--bg);font-weight:700}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:minmax(280px,440px) 1fr;gap:28px 48px;align-items:center;padding-block:20px 24px;border-bottom:1px solid var(--line)}
+@media (max-width:760px){.hero{grid-template-columns:1fr}}
+.dialwrap{display:flex;flex-direction:column;gap:12px;justify-self:center;width:100%;max-width:440px}
+.dial{width:100%;max-width:440px;aspect-ratio:1;display:block}
+.dlegend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:14px;color:var(--mute)}
+.dlegend span{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.sw{width:14px;height:5px;border-radius:3px;flex:none}
+.sw.ring{width:11px;height:11px;border-radius:50%;background:none;border:2px solid}
+.sw.dot{width:10px;height:10px;border-radius:50%}
+.sw.dot.big{width:14px;height:14px}
+.sw.dia{width:9px;height:9px;transform:rotate(45deg);border-radius:1px}
+.hero .text{display:flex;flex-direction:column;gap:18px;min-width:0}
+.hero .lede{max-width:46ch;color:var(--mute);font-size:17px}
+.clock{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end}
+.clock .k{font-size:13px;color:var(--mute)}
+.clock .v{font-family:var(--display);font-size:44px;line-height:1;font-weight:500}
+.clock .v small{font-family:var(--body);font-size:14px;color:var(--mute);margin-left:8px;font-weight:500}
+.region{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--mute)}
+.region select{background:var(--bg2);border:1px solid var(--line2);border-radius:6px;padding:6px 10px;font-size:14px}
+.next{display:grid;grid-template-columns:auto auto 1fr;gap:4px 16px;font-size:15px;align-items:baseline}
+.next .n{color:var(--mute)}
+.next .t{color:var(--mute);font-size:14px}
+.next .c{font-weight:700}
+
+section{padding-block:36px 0;display:flex;flex-direction:column;gap:18px}
+.sechead{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline}
+.sechead p{max-width:60ch;color:var(--mute)}
+
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:8px 12px;font-weight:500;color:var(--mute);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--gold);font-weight:700}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mute)}
+.toggle input{accent-color:var(--gold)}
+
+.tl{display:grid;grid-template-columns:72px 1fr}
+.tl>div{padding:10px 0;border-bottom:1px solid var(--line);min-width:0}
+.tl .h{font-family:var(--display);font-size:22px;font-weight:600;line-height:1.2}
+.tl .e{display:flex;flex-direction:column;gap:2px;padding-left:12px;border-left:3px solid var(--line2)}
+.tl .e .nm{font-weight:700}
+.tl .e .sb{color:var(--mute);font-size:14px}
+.tl .hourly .h,.tl .hourly .e .nm{font-weight:500;color:var(--mute)}
+.k-siege .e{border-left-color:var(--ember)} .k-boss .e{border-left-color:var(--violet)} .k-arena .e{border-left-color:var(--aether)}
+.k-rift .e{border-left-color:var(--sea)} .k-fest .e{border-left-color:var(--gold)} .k-reset .e{border-left-color:var(--fg)}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--mute)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:14px;height:3px;display:inline-block;border-radius:2px}
+
+.daily{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 40px}
+.daily .blk{padding-block:16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px;min-width:0}
+.daily .blk .sb{color:var(--mute);font-size:14px;max-width:52ch}
+.slots{display:flex;flex-wrap:wrap;gap:6px}
+.slots span{font-size:14px;padding:3px 9px;border-radius:4px;background:var(--bg2);border:1px solid var(--line)}
+.slots span.now{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700}
+.slots span.past{opacity:.55}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:15px}
+th,td{padding:10px 12px 10px 0;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th:first-child,td.day,#bosses td:first-child{padding-left:12px}
+thead th{font-weight:500;color:var(--mute);font-size:14px}
+td.day{font-family:var(--display);font-size:22px;font-weight:600;white-space:nowrap}
+td.time{white-space:nowrap;font-weight:700}
+tr.today td{background:var(--gold-dim);border-bottom-color:var(--gold)}
+tr.today td.day{box-shadow:inset 3px 0 0 var(--gold)}
+.tag{display:inline-block;font-size:13px;padding:1px 7px;border-radius:4px;margin-right:8px}
+.tag.siege{background:var(--ember-dim);color:var(--ember)} .tag.boss{background:var(--violet-dim);color:var(--violet)} .tag.arena{background:var(--aether-dim);color:var(--aether)} .tag.reset{background:var(--gold-dim);color:var(--gold)} .tag.rift{background:var(--sea-dim);color:var(--sea)} .tag.fest{background:var(--gold-dim);color:var(--gold)}
+
+/* schematic map */
+.maps{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.maps{grid-template-columns:1fr}}
+.map{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.map h3{font-size:20px;padding-left:4px}
+.map svg{width:100%;height:auto;display:block;aspect-ratio:4/3}
+.map .lvl{font-size:13px;color:var(--mute);padding-left:4px}
+.isle{fill:var(--bg);stroke:var(--line2);stroke-width:1.2}
+.isle-lbl{font-family:var(--display);font-size:13px;font-weight:600;fill:var(--mute);pointer-events:none}
+.mk{cursor:pointer}
+.mk circle.core{stroke:var(--bg2);stroke-width:2}
+.mk:focus-visible{outline:none}
+.mk:focus-visible circle.core,.mk.sel circle.core{stroke:var(--gold);stroke-width:3}
+.mk text{font-family:var(--body);font-size:10.5px;font-weight:700;fill:var(--fg);pointer-events:none}
+.mk .halo{fill:none;stroke-width:2;opacity:0}
+.mk.soon .halo{opacity:1}
+@media (prefers-reduced-motion:no-preference){.mk.soon .halo{animation:halo 1.6s ease-out infinite}}
+@keyframes halo{0%{r:9;opacity:.9}100%{r:22;opacity:0}}
+.mapinfo{border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:1fr auto;gap:4px 24px;align-items:baseline;background:var(--bg2);min-height:64px}
+.mapinfo .nm{font-family:var(--display);font-size:24px;font-weight:600}
+.mapinfo .cd{font-size:22px;font-weight:700;text-align:right;white-space:nowrap}
+.mapinfo .sb{color:var(--mute);font-size:14px;grid-column:1/-1}
+@media (max-width:520px){.mapinfo{grid-template-columns:1fr}.mapinfo .cd{text-align:left}}
+.rifts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:640px){.rifts{grid-template-columns:repeat(2,1fr)}}
+.rifts button{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-width:0}
+.rifts button b{font-family:var(--display);font-size:19px;font-weight:600}
+.rifts button span{font-size:13px;color:var(--mute)}
+.rifts button.soon{border-color:var(--sea);box-shadow:0 0 0 3px var(--sea-dim)}
+.maplegend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--mute)}
+.maplegend span{display:inline-flex;align-items:center;gap:7px}
+.maplegend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.maplegend i.art{border-radius:2px;transform:rotate(45deg);width:9px;height:9px}
+
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--mute);max-width:72ch}
+footer a{color:var(--aether)}
+@media (prefers-reduced-motion:no-preference){#hand{transition:transform .6s cubic-bezier(.3,.8,.3,1)}}
+</style>
+
+<div class="wrap">
+<div class="topbar"><div class="lang" role="group" aria-label="Język / Language"><button type="button" id="lang-pl" aria-pressed="true">Polski</button><button type="button" id="lang-en" aria-pressed="false">English</button></div></div>
+
+<div class="hero">
+  <div class="dialwrap">
+    <svg class="dial" id="dial" viewBox="0 0 440 440" role="img"></svg>
+    <div class="dlegend">
+      <span><i class="sw" style="background:var(--aether)"></i><span data-i="lg_arena"></span></span>
+      <span><i class="sw ring" style="border-color:var(--sea)"></i><span data-i="lg_rift"></span></span>
+      <span><i class="sw dot" style="background:var(--ember)"></i><span data-i="lg_kaira"></span></span>
+      <span><i class="sw dot" style="background:var(--violet)"></i><span data-i="lg_boss"></span></span>
+      <span><i class="sw dot big" style="background:var(--ember)"></i><span data-i="lg_siege"></span></span>
+      <span><i class="sw dia" style="background:var(--fg)"></i><span data-i="lg_reset"></span></span>
+    </div>
+    <p class="small mute" data-i="lg_note"></p>
+  </div>
+  <div class="text">
+    <h1 data-i="title"></h1>
+    <p class="lede" data-i="lede"></p>
+    <div class="clock">
+      <div><div class="k" data-i="srv"></div><div class="v"><span id="srv">--:--:--</span><small id="srvday"></small></div></div>
+      <div><div class="k" data-i="mine"></div><div class="v" id="my">--:--:--</div></div>
+    </div>
+    <label class="region"><span data-i="region"></span>
+      <select id="region">
+        <option value="Europe/Berlin" data-i="r_eu"></option>
+        <option value="America/New_York">NA East</option>
+        <option value="America/Los_Angeles">NA West</option>
+        <option value="America/Sao_Paulo" data-i="r_la"></option>
+      </select>
+    </label>
+    <div class="next" id="next"></div>
+  </div>
+</div>
+
+<section>
+  <div class="sechead"><h2 data-i="s1"></h2><p data-i="s1p"></p></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div class="legend">
+    <span><i style="background:var(--ember)"></i><span data-i="k_siege"></span></span>
+    <span><i style="background:var(--violet)"></i><span data-i="k_boss"></span></span>
+    <span><i style="background:var(--aether)"></i><span data-i="k_arena"></span></span>
+    <span><i style="background:var(--sea)"></i><span data-i="k_rift"></span></span>
+    <span><i style="background:var(--gold)"></i><span data-i="k_fest"></span></span>
+    <span><i style="background:var(--fg)"></i><span data-i="k_reset"></span></span>
+  </div>
+  <label class="toggle"><input type="checkbox" id="showhourly"> <span data-i="hourly"></span></label>
+  <div class="tl" id="tl"></div>
+</section>
+
+<section>
+  <div class="sechead"><h2 data-i="s2"></h2><p data-i="s2p"></p></div>
+  <div class="daily">
+    <div class="blk"><h3>Shugo Festival</h3><p class="sb" data-i="d_fest"></p><div class="slots" data-hours="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23" data-min="0"></div></div>
+    <div class="blk"><h3>Dimensional Invasion</h3><p class="sb" data-i="d_inv"></p><div class="slots" data-hours="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23" data-min="30"></div></div>
+    <div class="blk"><h3 data-i="h_rift"></h3><p class="sb" data-i="d_rift"></p><div class="slots" data-hours="2,5,8,11,14,17,20,23" data-min="0"></div></div>
+    <div class="blk"><h3>Watcher Kaira</h3><p class="sb" data-i="d_kaira"></p><div class="slots" data-hours="1,4,7,10,13,16,19,22" data-min="0"></div></div>
+    <div class="blk"><h3>Arena of Tactics</h3><p class="sb" data-i="d_arena"></p><div class="slots"><span data-i="a1"></span><span data-i="a2"></span></div></div>
+    <div class="blk"><h3 data-i="h_reset"></h3><p class="sb" data-i="d_reset"></p><div class="slots"><span data-i="rs1"></span><span data-i="rs2"></span></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2 data-i="s3"></h2><p data-i="s3p"></p></div>
+  <div class="tablewrap"><table id="week"><thead><tr><th data-i="th_day"></th><th data-i="th_time"></th><th data-i="th_ev"></th><th data-i="th_where"></th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section id="mapa">
+  <div class="sechead"><h2 data-i="s5"></h2><p data-i="s5p"></p></div>
+  <div class="maplegend">
+    <span><i style="background:var(--violet)"></i><span data-i="ml_boss"></span></span>
+    <span><i style="background:var(--ember)"></i><span data-i="ml_kaira"></span></span>
+    <span><i class="art" style="background:var(--gold)"></i><span data-i="ml_art"></span></span>
+    <span><i style="background:var(--sea)"></i><span data-i="ml_rift"></span></span>
+    <span class="mute" data-i="ml_pulse"></span>
+  </div>
+  <div class="mapinfo" id="mapinfo"><div class="nm" data-i="mi_hint"></div><div class="cd"></div><div class="sb" data-i="mi_hint2"></div></div>
+  <div class="maps">
+    <div class="map"><h3>Chaotic Lower Reshanta</h3><div class="lvl" data-i="m_low"></div><svg id="mapL" viewBox="0 0 400 300" role="group"></svg></div>
+    <div class="map"><h3>Chaotic Middle Reshanta</h3><div class="lvl" data-i="m_mid"></div><svg id="mapM" viewBox="0 0 400 300" role="group"></svg></div>
+  </div>
+  <h3 data-i="h_riftmap"></h3>
+  <div class="rifts" id="rifts"></div>
+</section>
+
+<section>
+  <div class="sechead"><h2 data-i="s4"></h2></div>
+  <div class="tablewrap"><table id="bosses"><thead><tr><th data-i="th_boss"></th><th data-i="th_lvl"></th><th data-i="th_reg"></th><th data-i="th_map"></th><th data-i="th_spawn"></th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<footer data-i="foot"></footer>
+</div>
+
+<script>
+(function(){
+  var I18N={
+    pl:{
+      title:'Zegar Atrei', lede:'Wydarzenia AION 2 Global w czasie serwera. Tarcza pokazuje wybrany dzień, wskazówka to teraz.',
+      srv:'Czas serwera', mine:'Twój czas', region:'Region serwera', r_eu:'Europa', r_la:'Ameryka Łacińska',
+      lg_arena:'Arena 11–14 i 19–21', lg_rift:'Rift co 3 h', lg_kaira:'Watcher Kaira co 3 h', lg_boss:'Bossy 21:00 / 21:30', lg_siege:'Artifact Siege 21:00', lg_reset:'Reset 16:00',
+      lg_note:'Co pełną godzinę: Shugo Festival. Co :30: Dimensional Invasion. Nie są rysowane na tarczy.',
+      s1:'Dzień po dniu', s1p:'Wydarzenia o stałych porach plus rifty i Watcher Kaira. Dziś zaznaczone domyślnie.',
+      k_siege:'Oblężenie', k_boss:'Boss polowy', k_arena:'Arena', k_rift:'Rift', k_fest:'Festiwal i inwazja', k_reset:'Reset i klucze',
+      hourly:'Pokaż także 48 slotów cogodzinnych (festiwal o :00, inwazja o :30)',
+      s2:'Codziennie, o każdej z tych godzin', s2p:'Aktualny slot jest podświetlony, minione przygaszone.',
+      d_fest:'Lobby otwiera się 3 minuty przed pełną godziną, runda trwa 3–5 minut. Verteron i Altgard, nagrody od 10 poziomu. 24 rundy dziennie.',
+      d_inv:'Beritra Air Raid, Accursed Sword albo Incursion of the Spirits. 3 minuty przygotowania, 10 minut walki. Nagrody od 45 poziomu. 24 inwazje dziennie.',
+      h_rift:'Rifty', d_rift:'Portale w Altgard, Verteron, Morheim i Eltnen. Co trzy godziny, osiem razy dziennie.',
+      d_kaira:'Boss 65 poziomu w Chaotic Lower Reshanta, Black Fragments Area na Abandoned Island. Co trzy godziny, osiem razy dziennie.',
+      d_arena:'10 na 10, od 45 poziomu. Arena of Solitude (1v1) i Arena of Cooperation (5v5) są otwarte bez ograniczeń.', a1:'11:00 do 14:00', a2:'19:00 do 21:00',
+      h_reset:'Reset i klucze nagród', d_reset:'Reset dzienny odnawia klucze: Shugo Festival Reward Key +3 (max 12, z członkostwem 21) i Dimensional Invasion Reward Key +1 (max 7). Reset tygodniowy wypada w środę.', rs1:'codziennie 16:00', rs2:'środa 16:00',
+      s3:'Tydzień', s3p:'Oblężenia i bossy weekendowe. Dzisiejszy dzień ma złoty pasek.', th_day:'Dzień', th_time:'Godzina', th_ev:'Wydarzenie', th_where:'Gdzie i co',
+      s4:'Bossy polowi', th_boss:'Boss', th_lvl:'Poziom', th_map:'Mapa i strefa', th_spawn:'Spawn',
+      foot:'Godziny pochodzą z tabel harmonogramu globalnego klienta AION 2 (build 0.0.4387.0), zaczytanych przez <a href="https://metabot.gg/en/aion-2/events">MetaBot.GG</a>. Strefy czasowe regionów nie są potwierdzone oficjalnie; przyjęto Berlin dla Europy, Nowy Jork i Los Angeles dla NA oraz São Paulo dla Ameryki Łacińskiej. Jeśli zegar serwera na tej stronie nie zgadza się z tym w grze, zmień region.',
+      days:['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'], ds:['Pon','Wt','Śr','Czw','Pt','Sob','Nd'],
+      lbl:{arena:'Arena',reset:'Reset',siege:'Oblężenie',boss:'Boss',rift:'Rift',fest:'Festiwal',inv:'Inwazja'},
+      c_siege:'oblężenie 21:00', c_nahma:'Nahma 21:00', c_none:'bez oblężenia', in_:'za', d:'d', h:'h', min:'min', s:'s',
+      ev:{
+        arena1:['Arena of Tactics, pierwsze okno','10 na 10, otwarte do 14:00'], reset:['Reset dzienny i klucze nagród','Shugo Festival Reward Key +3, Dimensional Invasion Reward Key +1'],
+        wreset:['Reset tygodniowy','limity wejść, Daeva Pass, rankingi'], arena2:['Arena of Tactics, drugie okno','10 na 10, otwarte do 21:00'],
+        siege:['Artifact Siege','Chaotic Lower Reshanta. Trzy artefakty: Reshanta’s Root, Sulfur Tree Island, Archipelago of Siel’s Wings. Ostrzeżenie 10 minut przed końcem, potem Abyss Corridor na 5 minut.'],
+        nahma:['Guardian Lord Nahma (65)','Lower Reshanta: Reshanta’s Root, Shade Island lub Lonely Island'], enahma:['Enraged Guardian Lord Nahma (80)','Middle Reshanta: Steel Titan’s Grave lub Eroded Fragment Area'],
+        ex65:['Executor Argo, Executor Kaira, Executor Tamasa (65)','Lower Reshanta: Siel’s Heart, Branding Island, Reshanta’s Root'], ex80:['Executioner Dramos, Ravager Marakha, Turncoat Ducal (80)','Middle Reshanta: Corroded Heart, Steel Titan’s Grave, Eroded Fragment Area'],
+        kaira:['Watcher Kaira (65)','Lower Reshanta, Abandoned Island'], rift:['Rifty','Altgard, Verteron, Morheim, Eltnen'], fest:['Shugo Festival','lobby od :57'], inv:['Dimensional Invasion','10 minut walki']
+      },
+      nx:{fest:'Shugo Festival',inv:'Dimensional Invasion',rift:'Rifty',kaira:'Watcher Kaira',arena:'Arena of Tactics',siege:'Artifact Siege',nahma:'Guardian Lord Nahma',reset:'Reset i klucze'},
+      spawn:{k:'co 3 h od 01:00', n:'piątek i niedziela 21:00', e:'pon, czw, sob 21:30'},
+      zones:{or:' lub ', sep:', '},
+      s5:'Mapa respów', s5p:'Schemat, nie mapa z gry: wyspy i strefy są uproszczone, ale nazwy i przypisania bossów są prawdziwe. Kliknij znacznik, żeby zobaczyć odliczanie.',
+      ml_boss:'Boss (pon, czw, sob 21:30 lub pt, nd 21:00)', ml_kaira:'Watcher Kaira (co 3 h)', ml_art:'Artefakt oblężenia (pon, czw, sob 21:00)', ml_rift:'Portal riftu (co 3 h)', ml_pulse:'Pulsuje, gdy spawn jest w ciągu 15 minut lub trwa od mniej niż 15 minut.',
+      mi_hint:'Wybierz znacznik na mapie', mi_hint2:'Pokażemy bossa, strefę i czas do następnego spawnu.',
+      m_low:'Otchłań (Abyss), poziom 65: artefakty i bossy Executor', m_mid:'Otchłań (Abyss), poziom 80: bossy weekendowe i po oblężeniu', h_riftmap:'Portale riftów, co 3 h od 02:00',
+      mi_next:'następny', mi_now:'teraz', mi_art:'Artefakt oblężenia. Rdzeń wymiarowy pojawia się na starcie oblężenia; frakcja, która zada ostatni cios, przejmuje artefakt.',
+      mi_rift:'Portal riftu do strefy przeciwnej frakcji. Otwiera się o 02:00, 05:00, 08:00, 11:00, 14:00, 17:00, 20:00 i 23:00.',
+      th_reg:'Gdzie', reg:{abyss:'Otchłań (Abyss) – Reshanta, strefa wspólna obu frakcji, poziom',ely:'kraina Elyos',asmo:'kraina Asmodian'},
+      reg_short:{abyss:'Otchłań / Abyss',ely:'Elyos',asmo:'Asmodianie'}
+    },
+    en:{
+      title:'Atreia Clock', lede:'AION 2 Global events in server time. The dial shows the selected day; the hand is now.',
+      srv:'Server time', mine:'Your time', region:'Server region', r_eu:'Europe', r_la:'Latin America',
+      lg_arena:'Arena 11–14 and 19–21', lg_rift:'Rift every 3 h', lg_kaira:'Watcher Kaira every 3 h', lg_boss:'Bosses 21:00 / 21:30', lg_siege:'Artifact Siege 21:00', lg_reset:'Reset 16:00',
+      lg_note:'Every full hour: Shugo Festival. Every :30: Dimensional Invasion. Not drawn on the dial.',
+      s1:'Day by day', s1p:'Fixed-time events plus rifts and Watcher Kaira. Today is selected by default.',
+      k_siege:'Siege', k_boss:'Field boss', k_arena:'Arena', k_rift:'Rift', k_fest:'Festival and invasion', k_reset:'Reset and keys',
+      hourly:'Also show the 48 hourly slots (festival at :00, invasion at :30)',
+      s2:'Every day, at each of these times', s2p:'The current slot is highlighted, past ones dimmed.',
+      d_fest:'The lobby opens 3 minutes before the hour, a round lasts 3–5 minutes. Verteron and Altgard, rewards from level 10. 24 rounds a day.',
+      d_inv:'Beritra Air Raid, Accursed Sword or Incursion of the Spirits. 3 minutes to prepare, 10 minutes of fighting. Rewards from level 45. 24 invasions a day.',
+      h_rift:'Rifts', d_rift:'Portals in Altgard, Verteron, Morheim and Eltnen. Every three hours, eight times a day.',
+      d_kaira:'Level 65 boss in Chaotic Lower Reshanta, Black Fragments Area on Abandoned Island. Every three hours, eight times a day.',
+      d_arena:'10 vs 10, from level 45. Arena of Solitude (1v1) and Arena of Cooperation (5v5) are open at all times.', a1:'11:00 to 14:00', a2:'19:00 to 21:00',
+      h_reset:'Reset and reward keys', d_reset:'The daily reset refills keys: Shugo Festival Reward Key +3 (max 12, 21 with membership) and Dimensional Invasion Reward Key +1 (max 7). The weekly reset is on Wednesday.', rs1:'daily 16:00', rs2:'Wednesday 16:00',
+      s3:'The week', s3p:'Sieges and weekend bosses. Today has a gold bar.', th_day:'Day', th_time:'Time', th_ev:'Event', th_where:'Where and what',
+      s4:'Field bosses', th_boss:'Boss', th_lvl:'Level', th_map:'Map and zone', th_spawn:'Spawn',
+      foot:'Times come from the schedule tables of the AION 2 global client (build 0.0.4387.0), read by <a href="https://metabot.gg/en/aion-2/events">MetaBot.GG</a>. Region time zones are not officially confirmed; Berlin is assumed for Europe, New York and Los Angeles for NA, São Paulo for Latin America. If the server clock on this page does not match the one in game, change the region.',
+      days:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'], ds:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      lbl:{arena:'Arena',reset:'Reset',siege:'Siege',boss:'Boss',rift:'Rift',fest:'Festival',inv:'Invasion'},
+      c_siege:'siege 21:00', c_nahma:'Nahma 21:00', c_none:'no siege', in_:'in', d:'d', h:'h', min:'min', s:'s',
+      ev:{
+        arena1:['Arena of Tactics, first window','10 vs 10, open until 14:00'], reset:['Daily reset and reward keys','Shugo Festival Reward Key +3, Dimensional Invasion Reward Key +1'],
+        wreset:['Weekly reset','entry limits, Daeva Pass, rankings'], arena2:['Arena of Tactics, second window','10 vs 10, open until 21:00'],
+        siege:['Artifact Siege','Chaotic Lower Reshanta. Three artifacts: Reshanta’s Root, Sulfur Tree Island, Archipelago of Siel’s Wings. Warning 10 minutes before the end, then Abyss Corridor for 5 minutes.'],
+        nahma:['Guardian Lord Nahma (65)','Lower Reshanta: Reshanta’s Root, Shade Island or Lonely Island'], enahma:['Enraged Guardian Lord Nahma (80)','Middle Reshanta: Steel Titan’s Grave or Eroded Fragment Area'],
+        ex65:['Executor Argo, Executor Kaira, Executor Tamasa (65)','Lower Reshanta: Siel’s Heart, Branding Island, Reshanta’s Root'], ex80:['Executioner Dramos, Ravager Marakha, Turncoat Ducal (80)','Middle Reshanta: Corroded Heart, Steel Titan’s Grave, Eroded Fragment Area'],
+        kaira:['Watcher Kaira (65)','Lower Reshanta, Abandoned Island'], rift:['Rifts','Altgard, Verteron, Morheim, Eltnen'], fest:['Shugo Festival','lobby from :57'], inv:['Dimensional Invasion','10 minutes of fighting']
+      },
+      nx:{fest:'Shugo Festival',inv:'Dimensional Invasion',rift:'Rifts',kaira:'Watcher Kaira',arena:'Arena of Tactics',siege:'Artifact Siege',nahma:'Guardian Lord Nahma',reset:'Reset and keys'},
+      spawn:{k:'every 3 h from 01:00', n:'Friday and Sunday 21:00', e:'Mon, Thu, Sat 21:30'},
+      zones:{or:' or ', sep:', '},
+      s5:'Spawn map', s5p:'A schematic, not the in-game map: islands and zones are simplified, but names and boss placements are real. Click a marker to see its countdown.',
+      ml_boss:'Boss (Mon, Thu, Sat 21:30 or Fri, Sun 21:00)', ml_kaira:'Watcher Kaira (every 3 h)', ml_art:'Siege artifact (Mon, Thu, Sat 21:00)', ml_rift:'Rift portal (every 3 h)', ml_pulse:'Pulses when the spawn is within 15 minutes or started less than 15 minutes ago.',
+      mi_hint:'Pick a marker on the map', mi_hint2:'You will see the boss, its zone and time to the next spawn.',
+      m_low:'The Abyss, level 65: artifacts and Executor bosses', m_mid:'The Abyss, level 80: weekend and post-siege bosses', h_riftmap:'Rift portals, every 3 h from 02:00',
+      mi_next:'next', mi_now:'now', mi_art:'Siege artifact. A Dimensional Core appears when the siege starts; the faction that lands the last hit takes the artifact.',
+      mi_rift:'Rift portal into the opposing faction’s zone. Opens at 02:00, 05:00, 08:00, 11:00, 14:00, 17:00, 20:00 and 23:00.',
+      th_reg:'Where', reg:{abyss:'The Abyss – Reshanta, shared zone for both factions, level',ely:'Elyos land',asmo:'Asmodian land'},
+      reg_short:{abyss:'The Abyss',ely:'Elyos',asmo:'Asmodian'}
+    }
+  };
+  var BOSSES=[
+    ['Watcher Kaira',65,'Chaotic Lower Reshanta, Black Fragments Area (Abandoned Island)','k'],
+    ['Guardian Lord Nahma',65,['Chaotic Lower Reshanta: Reshanta’s Root, Shade Island','Lonely Island'],'n'],
+    ['Enraged Guardian Lord Nahma',80,['Chaotic Middle Reshanta: Steel Titan’s Grave','Eroded Fragment Area'],'n'],
+    ['Executor Argo',65,'Chaotic Lower Reshanta, Archipelago of Siel’s Wings (Siel’s Heart)','e'],
+    ['Executor Kaira',65,'Chaotic Lower Reshanta, Sulfur Tree Island (Branding Island)','e'],
+    ['Executor Tamasa',65,'Chaotic Lower Reshanta, Reshanta’s Root','e'],
+    ['Executioner Dramos',80,'Chaotic Middle Reshanta, Corroded Heart','e'],
+    ['Ravager Marakha',80,'Chaotic Middle Reshanta, Steel Titan’s Grave','e'],
+    ['Turncoat Ducal',80,'Chaotic Middle Reshanta, Eroded Fragment Area','e']
+  ];
+  var SIEGE=[0,3,5], NAHMA=[4,6], ALL=[0,1,2,3,4,5,6];
+  var FIXED=[
+    {d:ALL,h:11,m:0,k:'arena',id:'arena1',end:'14:00'},{d:ALL,h:16,m:0,k:'reset',id:'reset'},{d:[2],h:16,m:0,k:'reset',id:'wreset'},{d:ALL,h:19,m:0,k:'arena',id:'arena2',end:'21:00'},
+    {d:SIEGE,h:21,m:0,k:'siege',id:'siege'},{d:NAHMA,h:21,m:0,k:'boss',id:'nahma'},{d:NAHMA,h:21,m:0,k:'boss',id:'enahma'},{d:SIEGE,h:21,m:30,k:'boss',id:'ex65'},{d:SIEGE,h:21,m:30,k:'boss',id:'ex80'}
+  ];
+  function pad(n){return (n<10?'0':'')+n} function tt(h,m){return pad(h)+':'+pad(m)}
+
+  var lang='pl', L=I18N.pl;
+  try{var sl=localStorage.getItem('aion2-lang'); if(sl&&I18N[sl])lang=sl}catch(e){}
+  var regionSel=document.getElementById('region'), tz=regionSel.value, hourlyBox=document.getElementById('showhourly');
+  try{var sv=localStorage.getItem('aion2-tz'); if(sv){regionSel.value=sv;tz=sv}}catch(e){}
+  try{hourlyBox.checked=localStorage.getItem('aion2-hourly')==='1'}catch(e){}
+
+  function applyLang(){
+    L=I18N[lang]; document.documentElement.lang=lang; document.title=L.title;
+    document.querySelectorAll('[data-i]').forEach(function(n){var k=n.getAttribute('data-i'); if(k==='foot')n.innerHTML=L[k]; else n.textContent=L[k]});
+    document.getElementById('lang-pl').setAttribute('aria-pressed',lang==='pl'?'true':'false');
+    document.getElementById('lang-en').setAttribute('aria-pressed',lang==='en'?'true':'false');
+    document.getElementById('dial').setAttribute('aria-label',lang==='pl'?'Tarcza dnia serwera z zaznaczonymi wydarzeniami':'Server-day dial with marked events');
+    renderTabs();renderTL();renderWeek();renderBosses();drawDial(true);renderMaps();tick1();
+  }
+  document.getElementById('lang-pl').addEventListener('click',function(){lang='pl';try{localStorage.setItem('aion2-lang','pl')}catch(e){}applyLang()});
+  document.getElementById('lang-en').addEventListener('click',function(){lang='en';try{localStorage.setItem('aion2-lang','en')}catch(e){}applyLang()});
+
+  function serverNow(){
+    var p=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour12:false,weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(new Date());
+    var o={}; p.forEach(function(x){o[x.type]=x.value});
+    var h=parseInt(o.hour,10)%24;
+    return {dow:{Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6}[o.weekday],h:h,m:+o.minute,s:+o.second,str:pad(h)+':'+o.minute+':'+o.second};
+  }
+  function dayList(d,withHourly){
+    var l=[];
+    FIXED.forEach(function(e){if(e.d.indexOf(d)>=0)l.push({h:e.h,m:e.m,k:e.k,n:L.ev[e.id][0],s:L.ev[e.id][1]})});
+    for(var h=1;h<24;h+=3)l.push({h:h,m:0,k:'boss',n:L.ev.kaira[0],s:L.ev.kaira[1]});
+    for(var r=2;r<24;r+=3)l.push({h:r,m:0,k:'rift',n:L.ev.rift[0],s:L.ev.rift[1]});
+    if(withHourly)for(var a=0;a<24;a++){l.push({h:a,m:0,k:'fest',n:L.ev.fest[0],s:L.ev.fest[1],hourly:1});l.push({h:a,m:30,k:'inv',n:L.ev.inv[0],s:L.ev.inv[1],hourly:1})}
+    l.sort(function(x,y){return (x.h*60+x.m)-(y.h*60+y.m)||(x.hourly?1:0)-(y.hourly?1:0)});
+    return l;
+  }
+
+  var sel=serverNow().dow, tabs=document.getElementById('tabs'), tl=document.getElementById('tl');
+  function renderTabs(){
+    tabs.innerHTML='';
+    L.days.forEach(function(n,i){var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.id='tab'+i;b.textContent=window.innerWidth<600?L.ds[i]:n;b.setAttribute('aria-selected',i===sel?'true':'false');b.addEventListener('click',function(){sel=i;renderTabs();renderTL();drawDial(true)});tabs.appendChild(b)});
+  }
+  function renderTL(){
+    var html='';
+    dayList(sel,hourlyBox.checked).forEach(function(e){var kk=e.k==='inv'?'fest':e.k;
+      html+='<div class="h k-'+kk+(e.hourly?' hourly':'')+'">'+tt(e.h,e.m)+'</div><div class="k-'+kk+(e.hourly?' hourly':'')+'"><div class="e"><div class="nm">'+e.n+'</div><div class="sb">'+e.s+'</div></div></div>'});
+    tl.innerHTML=html;
+  }
+  function renderWeek(){
+    var st=serverNow(),html='';
+    for(var d=0;d<7;d++){var evs=FIXED.filter(function(e){return e.d.indexOf(d)>=0});
+      evs.forEach(function(e,i){html+='<tr'+(d===st.dow?' class="today"':'')+'>'+(i===0?'<td class="day" rowspan="'+evs.length+'">'+L.days[d]+'</td>':'')+'<td class="time">'+tt(e.h,e.m)+(e.end?' – '+e.end:'')+'</td><td><span class="tag '+e.k+'">'+L.lbl[e.k]+'</span>'+L.ev[e.id][0]+'</td><td class="mute small">'+L.ev[e.id][1]+'</td></tr>'})}
+    document.querySelector('#week tbody').innerHTML=html;
+  }
+  function renderBosses(){
+    document.querySelector('#bosses tbody').innerHTML=BOSSES.map(function(b){var where=typeof b[2]==='string'?b[2]:b[2].join(L.zones.or);return '<tr><td>'+b[0]+'</td><td>'+b[1]+'</td><td><span class="tag siege">'+L.reg_short.abyss+'</span></td><td>'+where+'</td><td class="time">'+L.spawn[b[3]]+'</td></tr>'}).join('');
+  }
+
+  var svg=document.getElementById('dial'), NS='http://www.w3.org/2000/svg', C=220, R=160, hand=null;
+  function P(min,r){var a=(min/1440)*Math.PI*2-Math.PI/2;return [C+r*Math.cos(a),C+r*Math.sin(a)]}
+  function el(t,attrs){var e=document.createElementNS(NS,t);for(var k in attrs)e.setAttribute(k,attrs[k]);return e}
+  function arc(m1,m2,r,stroke,w,op){var a=P(m1,r),b=P(m2,r);return el('path',{d:'M'+a[0]+' '+a[1]+' A'+r+' '+r+' 0 0 1 '+b[0]+' '+b[1],stroke:stroke,'stroke-width':w,fill:'none','stroke-linecap':'round',opacity:op||1})}
+  function tick(min,r1,r2,stroke,w){var a=P(min,r1),b=P(min,r2);return el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:stroke,'stroke-width':w,'stroke-linecap':'round'})}
+  function drawDial(){
+    var st=serverNow(), day=sel;
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    var cs=getComputedStyle(document.documentElement), col=function(n){return cs.getPropertyValue(n).trim()};
+    svg.appendChild(el('circle',{cx:C,cy:C,r:R,fill:col('--bg2'),stroke:col('--line2'),'stroke-width':1.5}));
+    for(var h=0;h<24;h++){
+      svg.appendChild(tick(h*60,R-10,R,col(h%6===0?'--fg':'--line2'),h%6===0?2.5:1.5));
+      if(h%2===0){var pn=P(h*60,R+22);var t=el('text',{x:pn[0],y:pn[1]+6,'text-anchor':'middle','font-family':col('--display'),'font-size':h%6===0?24:17,'font-weight':600,fill:h%6===0?col('--fg'):col('--mute')});t.textContent=h;svg.appendChild(t)}
+    }
+    [[660,840],[1140,1260]].forEach(function(w){svg.appendChild(arc(w[0],w[1],R-22,col('--aether'),10,.95))});
+    var R2=R-48;
+    svg.appendChild(el('circle',{cx:C,cy:C,r:R2,fill:'none',stroke:col('--line'),'stroke-width':1}));
+    for(var r=2;r<24;r+=3){var p=P(r*60,R2);svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:7,fill:col('--bg2'),stroke:col('--sea'),'stroke-width':3}))}
+    for(var k=1;k<24;k+=3){var q=P(k*60,R2);svg.appendChild(el('circle',{cx:q[0],cy:q[1],r:6.5,fill:col('--ember')}))}
+    var R3=R-82;
+    var rp=P(960,R3);svg.appendChild(el('rect',{x:rp[0]-6,y:rp[1]-6,width:12,height:12,fill:col('--fg'),transform:'rotate(45 '+rp[0]+' '+rp[1]+')'}));
+    if(SIEGE.indexOf(day)>=0){var sp=P(1260,R3);svg.appendChild(el('circle',{cx:sp[0],cy:sp[1],r:16,fill:col('--ember'),opacity:.22}));svg.appendChild(el('circle',{cx:sp[0],cy:sp[1],r:9,fill:col('--ember')}));var bp=P(1290,R3-26);svg.appendChild(el('circle',{cx:bp[0],cy:bp[1],r:7,fill:col('--violet')}))}
+    if(NAHMA.indexOf(day)>=0){var np=P(1260,R3);svg.appendChild(el('circle',{cx:np[0],cy:np[1],r:9,fill:col('--violet')}))}
+    var lab=el('text',{x:C,y:C-4,'text-anchor':'middle','font-family':col('--display'),'font-size':20,'font-weight':600,fill:col('--fg')});lab.textContent=L.days[day];svg.appendChild(lab);
+    var lab2=el('text',{x:C,y:C+18,'text-anchor':'middle','font-family':col('--body'),'font-size':13,fill:col('--mute')});lab2.textContent=SIEGE.indexOf(day)>=0?L.c_siege:(NAHMA.indexOf(day)>=0?L.c_nahma:L.c_none);svg.appendChild(lab2);
+    var g=el('g',{id:'hand'});g.appendChild(el('line',{x1:C,y1:C+10,x2:C,y2:C-(R-4),stroke:col('--gold'),'stroke-width':3,'stroke-linecap':'round'}));g.appendChild(el('circle',{cx:C,cy:C,r:5,fill:col('--gold')}));svg.appendChild(g);
+    hand=g; setHand(st);
+  }
+  function setHand(st){if(!hand)return;hand.setAttribute('transform','rotate('+(((st.h*60+st.m+st.s/60)/1440)*360)+' '+C+' '+C+')')}
+
+  function nextOf(st,items){var best=null,now=st.dow*1440+st.h*60+st.m+st.s/60;items.forEach(function(it){(it.d||ALL).forEach(function(d){var diff=d*1440+it.h*60+it.m-now;if(diff<=0)diff+=10080;if(best===null||diff<best.diff)best={diff:diff,h:it.h,m:it.m}})});return best}
+  function fmt(min){var t=Math.round(min*60),d=Math.floor(t/86400),h=Math.floor(t%86400/3600),m=Math.floor(t%3600/60),s=t%60;if(d)return d+' '+L.d+' '+h+' '+L.h+' '+pad(m)+' '+L.min;if(h)return h+' '+L.h+' '+pad(m)+' '+L.min+' '+pad(s)+' '+L.s;return m+' '+L.min+' '+pad(s)+' '+L.s}
+  function tick1(){
+    var st=serverNow();
+    document.getElementById('srv').textContent=st.str; document.getElementById('srvday').textContent=L.days[st.dow];
+    var n=new Date(); document.getElementById('my').textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+    setHand(st); updateMarks();
+    var H=[],HH=[],RI=[],KA=[];for(var a=0;a<24;a++){H.push({h:a,m:0});HH.push({h:a,m:30})}for(var r=2;r<24;r+=3)RI.push({h:r,m:0});for(var k=1;k<24;k+=3)KA.push({h:k,m:0});
+    var rows=[['fest',nextOf(st,H)],['inv',nextOf(st,HH)],['rift',nextOf(st,RI)],['kaira',nextOf(st,KA)],['arena',nextOf(st,[{h:11,m:0},{h:19,m:0}])],['siege',nextOf(st,[{d:SIEGE,h:21,m:0}])],['nahma',nextOf(st,[{d:NAHMA,h:21,m:0}])],['reset',nextOf(st,[{h:16,m:0}])]];
+    document.getElementById('next').innerHTML=rows.map(function(r){return '<span class="n">'+L.nx[r[0]]+'</span><span class="t">'+tt(r[1].h,r[1].m)+'</span><span class="c">'+L.in_+' '+fmt(r[1].diff)+'</span>'}).join('');
+    document.querySelectorAll('.slots[data-hours]').forEach(function(box){
+      var mm=+box.dataset.min,hs=box.dataset.hours.split(',').map(Number);
+      if(!box.dataset.built){box.innerHTML=hs.map(function(h){return '<span data-h="'+h+'">'+tt(h,mm)+'</span>'}).join('');box.dataset.built='1'}
+      var now=st.h*60+st.m,cur=null;hs.forEach(function(h){if(h*60+mm<=now)cur=h});
+      box.querySelectorAll('span').forEach(function(s){var h=+s.dataset.h;s.classList.toggle('now',h===cur);s.classList.toggle('past',cur!==null&&h<cur)});
+    });
+  }
+
+  /* ---------- schematic map ---------- */
+  // islands: id, label, path (hand-drawn blobs in a 400x300 box)
+  var ISLES={
+    L:[
+      {id:'root',lbl:'Reshanta’s Root',d:'M150 120 C175 95 230 95 250 125 C268 150 255 185 225 195 C190 206 150 190 140 160 C134 142 140 130 150 120 Z'},
+      {id:'sulfur',lbl:'Sulfur Tree Island',d:'M40 60 C70 35 125 40 135 70 C142 92 120 112 90 112 C55 112 28 85 40 60 Z',sub:'Branding Island'},
+      {id:'siel',lbl:'Archipelago of Siel’s Wings',d:'M275 40 C310 20 365 35 370 70 C374 98 345 115 310 110 C280 106 262 80 275 40 Z',sub:'Siel’s Heart'},
+      {id:'black',lbl:'Black Fragments Area',d:'M250 220 C285 205 345 215 360 245 C372 272 340 292 300 288 C262 284 232 250 250 220 Z',sub:'Abandoned Island / Lonely Island'},
+      {id:'dev',lbl:'Devastated Remnants',d:'M35 190 C65 170 120 180 128 212 C134 240 105 262 70 258 C40 254 18 220 35 190 Z',sub:'Shade Island'}
+    ],
+    M:[
+      {id:'titan',lbl:'Steel Titan’s Grave',d:'M40 70 C80 35 170 40 185 85 C196 118 160 150 110 150 C65 150 20 115 40 70 Z'},
+      {id:'eroded',lbl:'Eroded Fragment Area',d:'M230 45 C275 25 355 40 365 85 C372 118 340 145 295 142 C250 139 212 95 230 45 Z'},
+      {id:'corroded',lbl:'Corroded Heart',d:'M120 190 C160 160 250 165 275 205 C298 240 265 282 205 282 C150 282 100 240 120 190 Z'}
+    ]
+  };
+  // markers: map, x, y, kind (boss|kaira|art), name, lvl, zone, sched (e|n|k|s)
+  var MARKS=[
+    {map:'L',x:200,y:150,k:'art',n:'Reshanta’s Root',z:'root',s:'s'},
+    {map:'L',x:228,y:168,k:'boss',n:'Executor Tamasa',lvl:65,z:'Reshanta’s Root',s:'e'},
+    {map:'L',x:170,y:135,k:'boss',n:'Guardian Lord Nahma',lvl:65,z:'Reshanta’s Root / Shade Island / Lonely Island',s:'n'},
+    {map:'L',x:85,y:70,k:'art',n:'Sulfur Tree Island',z:'sulfur',s:'s'},
+    {map:'L',x:112,y:90,k:'boss',n:'Executor Kaira',lvl:65,z:'Sulfur Tree Island, Branding Island',s:'e'},
+    {map:'L',x:320,y:65,k:'art',n:'Archipelago of Siel’s Wings',z:'siel',s:'s'},
+    {map:'L',x:345,y:90,k:'boss',n:'Executor Argo',lvl:65,z:'Archipelago of Siel’s Wings, Siel’s Heart',s:'e'},
+    {map:'L',x:300,y:255,k:'kaira',n:'Watcher Kaira',lvl:65,z:'Black Fragments Area, Abandoned Island',s:'k'},
+    {map:'M',x:110,y:95,k:'boss',n:'Ravager Marakha',lvl:80,z:'Steel Titan’s Grave',s:'e'},
+    {map:'M',x:150,y:120,k:'boss',n:'Enraged Guardian Lord Nahma',lvl:80,z:'Steel Titan’s Grave / Eroded Fragment Area',s:'n'},
+    {map:'M',x:300,y:90,k:'boss',n:'Turncoat Ducal',lvl:80,z:'Eroded Fragment Area',s:'e'},
+    {map:'M',x:200,y:225,k:'boss',n:'Executioner Dramos',lvl:80,z:'Corroded Heart',s:'e'}
+  ];
+  var RIFTZ=['Altgard','Verteron','Morheim','Eltnen'], RIFTF=['asmo','ely','asmo','ely'];
+  var SCHED={e:[{d:SIEGE,h:21,m:30}],n:[{d:NAHMA,h:21,m:0}],s:[{d:SIEGE,h:21,m:0}],k:[],r:[]};
+  for(var kh=1;kh<24;kh+=3)SCHED.k.push({h:kh,m:0}); for(var rh=2;rh<24;rh+=3)SCHED.r.push({h:rh,m:0});
+  var KCOL={boss:'--violet',kaira:'--ember',art:'--gold'};
+  var selMark=null;
+  function renderMaps(){
+    ['L','M'].forEach(function(m){
+      var s=document.getElementById('map'+m); while(s.firstChild)s.removeChild(s.firstChild);
+      var cs=getComputedStyle(document.documentElement), col=function(n){return cs.getPropertyValue(n).trim()};
+      ISLES[m].forEach(function(i){
+        var p=el('path',{d:i.d,'class':'isle'}); s.appendChild(p); var bb=p.getBBox();
+        var t=el('text',{x:bb.x+bb.width/2,y:bb.y+bb.height+13,'text-anchor':'middle','class':'isle-lbl'}); t.textContent=i.lbl; s.appendChild(t);
+      });
+      MARKS.forEach(function(mk,idx){
+        if(mk.map!==m)return;
+        var g=el('g',{'class':'mk','tabindex':'0','role':'button','data-idx':idx,transform:'translate('+mk.x+' '+mk.y+')'});
+        g.appendChild(el('circle',{'class':'halo',cx:0,cy:0,r:9,stroke:col(KCOL[mk.k])}));
+        if(mk.k==='art'){g.appendChild(el('rect',{'class':'core',x:-7,y:-7,width:14,height:14,fill:col('--gold'),stroke:col('--bg2'),'stroke-width':2,transform:'rotate(45)'}))}
+        else g.appendChild(el('circle',{'class':'core',cx:0,cy:0,r:mk.k==='kaira'?7:8,fill:col(KCOL[mk.k])}));
+        var lab=el('text',{x:0,y:mk.k==='art'?-13:-13,'text-anchor':'middle'}); lab.textContent=mk.k==='art'?'':(mk.n.replace('Guardian Lord ','').replace('Enraged ','')); g.appendChild(lab);
+        g.addEventListener('click',function(){selectMark(idx)}); g.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();selectMark(idx)}});
+        s.appendChild(g);
+      });
+    });
+    var rb=document.getElementById('rifts'); rb.innerHTML='';
+    RIFTZ.forEach(function(z,i){var b=document.createElement('button');b.type='button';b.id='rift'+i;b.innerHTML='<b>'+z+'</b><span>'+L.reg_short[RIFTF[i]]+' · '+(lang==='pl'?'co 3 h od 02:00':'every 3 h from 02:00')+'</span>';b.addEventListener('click',function(){selectMark('r'+i)});rb.appendChild(b)});
+    updateMarks();
+  }
+  function selectMark(idx){selMark=idx;document.querySelectorAll('.mk').forEach(function(g){g.classList.toggle('sel',g.getAttribute('data-idx')===String(idx))});updateMarks()}
+  function updateMarks(){
+    var st=serverNow(), now=st.dow*1440+st.h*60+st.m+st.s/60;
+    function soon(sch){var n=nextOf(st,sch);if(!n)return false;if(n.diff<=15)return true;var ago=null;sch.forEach(function(it){(it.d||ALL).forEach(function(d){var a=now-(d*1440+it.h*60+it.m);if(a<0)a+=10080;if(ago===null||a<ago)ago=a})});return ago!==null&&ago<=15}
+    document.querySelectorAll('.mk').forEach(function(g){var mk=MARKS[+g.getAttribute('data-idx')];g.classList.toggle('soon',soon(SCHED[mk.s]))});
+    var rsoon=soon(SCHED.r); document.querySelectorAll('.rifts button').forEach(function(b){b.classList.toggle('soon',rsoon)});
+    var box=document.getElementById('mapinfo'); if(selMark===null)return;
+    var n,sub,sch;
+    if(typeof selMark==='string'){var ri=+selMark.slice(1);n=RIFTZ[ri]+' – '+L.ev.rift[0];sub=L.reg[RIFTF[ri]]+'. '+L.mi_rift;sch=SCHED.r}
+    else{var mk=MARKS[selMark];sch=SCHED[mk.s];n=mk.n+(mk.lvl?' ('+mk.lvl+')':'');var regtxt=L.reg.abyss+' '+(mk.map==='L'?'65':'80')+'. ';sub=regtxt+(mk.k==='art'?L.mi_art:(mk.map==='L'?'Chaotic Lower Reshanta, ':'Chaotic Middle Reshanta, ')+mk.z+'. '+L.spawn[mk.s])}
+    var nx=nextOf(st,sch);
+    box.innerHTML='<div class="nm">'+n+'</div><div class="cd">'+tt(nx.h,nx.m)+' · '+L.in_+' '+fmt(nx.diff)+'</div><div class="sb">'+sub+'</div>';
+  }
+
+  regionSel.addEventListener('change',function(){tz=regionSel.value;try{localStorage.setItem('aion2-tz',tz)}catch(e){}tick1();renderWeek()});
+  hourlyBox.addEventListener('change',function(){try{localStorage.setItem('aion2-hourly',hourlyBox.checked?'1':'0')}catch(e){}renderTL()});
+  window.addEventListener('resize',renderTabs);
+  if(window.matchMedia){window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){drawDial(true)})}
+
+  applyLang(); setInterval(tick1,1000);
+})();
+</script>
